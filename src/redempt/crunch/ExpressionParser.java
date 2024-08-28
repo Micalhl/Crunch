@@ -146,9 +146,13 @@ public class ExpressionParser {
                 break; // Ignore
         }
 
+        final int lastParsed = cursor;
         Token leadingOperator = environment.getLeadingOperators().getWith(this);
         if (leadingOperator != null) {
-            return parseLeadingOperation(leadingOperator);
+            if (!(isAtEnd() || input.charAt(cursor) != '(')) {
+                return parseLeadingOperation(leadingOperator);
+            }
+            cursor = lastParsed;
         }
         Value term = environment.getValues().getWith(this);
         if (term == null) {
