@@ -148,11 +148,14 @@ public class ExpressionParser {
 
         final int lastParsed = cursor;
         Token leadingOperator = environment.getLeadingOperators().getWith(this);
+        final int leadingOperatorCursor = cursor;
         if (leadingOperator != null) {
-            if (!(isAtEnd() || input.charAt(cursor) != '(')) {
+            if (isNeedBack(leadingOperator)) {
+                cursor = lastParsed;
+            } else {
+                cursor = leadingOperatorCursor;
                 return parseLeadingOperation(leadingOperator);
             }
-            cursor = lastParsed;
         }
         Value term = environment.getValues().getWith(this);
         if (term == null) {
@@ -222,6 +225,25 @@ public class ExpressionParser {
         }
         expression.initialize(value, maxVarIndex + 1);
         return expression;
+    }
+
+    private boolean isNeedBack(Token token) {
+        whitespace();
+        if (isAtEnd()) {
+            return true;
+        }
+        switch (token.getType()) {
+            case UNARY_OPERATOR:
+                final Token unary = environment.getLeadingOperators().getWith(this);
+                if (unary != null && unary.getType() == TokenType.UNARY_OPERATOR) {
+                    return false;
+                }
+                final Token binary = environment.getBinaryOperators().getWith(this);
+                return binary != null;
+            case FUNCTION:
+                return input.charAt(cursor) != '(';
+        }
+        return false;
     }
 
 }
